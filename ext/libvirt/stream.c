@@ -244,7 +244,7 @@ static void stream_event_callback(virStreamPtr st, int events, void *opaque)
 
 /*
  * call-seq:
- *   stream.event_add_callback(events, callback, opaque=nil) -> nil
+ *   stream.event_add_callback(events, callback, opaque=nil) -> callback_opaque
  *
  * Call virStreamEventAddCallback[http://www.libvirt.org/html/libvirt-libvirt-stream.html#virStreamEventAddCallback]
  * to register a callback to be notified when a stream becomes readable or
@@ -256,6 +256,9 @@ static void stream_event_callback(virStreamPtr st, int events, void *opaque)
  * itself, the integer that represents the events that actually occurred, and
  * an opaque pointer that was (optionally) passed into
  * stream.event_add_callback to begin with.
+ * Store callback_opaque until stream is finished, because without this garbage
+ * collector can dereference it which will lead to failure
+ * in stream.stream_event_callback function.
  */
 static VALUE libvirt_stream_event_add_callback(int argc, VALUE *argv, VALUE s)
 {
@@ -281,7 +284,7 @@ static VALUE libvirt_stream_event_add_callback(int argc, VALUE *argv, VALUE s)
                                 "virStreamEventAddCallback",
                                 ruby_libvirt_connect_get(s));
 
-    return Qnil;
+    return passthrough;
 }
 
 /*
